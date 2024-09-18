@@ -2,32 +2,18 @@ import numpy as np
 import tensorflow as tf
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import multivariate_normal
-multivariate_normal.pdf()
-# OR PERHAPS JUST IN CASE
-multivariate_normal.logpdf()
-
-
-
-def class_acc(pred,gt):
-    # Calculates class accuracy
-    pred = np.array(pred)
-    gt = np.array(gt)
-    correctpreds = np.sum(pred == gt)
-    totalpreds = len(gt)
-    accuracy = correctpreds / totalpreds
-
-    return accuracy
 
 
 def preprocess_data(x_train, x_test):
-    # Flatten the images and normalize pixel values to the range [0, 1]
+    # Flattens the images and normalizes pixel values to the range [0, 1]
     x_train_flattened = x_train.reshape(x_train.shape[0], -1) / 255.0
     x_test_flattened = x_test.reshape(x_test.shape[0], -1) / 255.0
 
     return x_train_flattened, x_test_flattened
 
 def add_noise(x_train):
-    noise = np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
+    # Adds Zero mean white noise to training data
+    noise = np.random.normal(loc=0.0, scale=0.1, size=x_train.shape)
     x_train_noise = x_train + noise
     
     return np.clip(x_train_noise, 0.0, 1.0)
@@ -41,6 +27,16 @@ def train_data(x_train, y_train):
     knn.fit(x_train, y_train)
 
     return knn
+
+def class_acc(pred,gt):
+    # Calculates class accuracy
+    pred = np.array(pred)
+    gt = np.array(gt)
+    correctpreds = np.sum(pred == gt)
+    totalpreds = len(gt)
+    accuracy = correctpreds / totalpreds
+
+    return accuracy
 
 def test_data(knn, x_test, y_test):
     y_pred = knn.predict(x_test)
@@ -66,35 +62,27 @@ def calculate_covariance(x_train, classes):
 
     for dataclass in range(num_classes):
         class_data = x_train[classes == dataclass]
-        covariance = np.cov(class_data, axis=0)
+        covariance = np.cov(class_data, rowvar=False)
         covariances.append(covariance)
 
-
-def log_likelihood(x, mean, var):
-    # Calculates logaritmic likehood for every test sample
-    epsilon=1e-8
-    var = var + epsilon
-
-    term1 = -0.5 * np.log(2 * np.pi) # Constant for every class
-    term2 = -0.5 * np.log(var)
-    term3 = -0.5 * ((x-mean)**2)/var
-
-    log_likelihood = np.sum(term1 + term2 + term3)
-    return log_likelihood
+    return covariances
 
 
-def predict_class(x, means, variances):
-    # x is the test sample
-    # means and variances are the lists of mean and variance vectors for each class
+def predict_class(x_test, means, covariances):
     num_classes = len(means)
-    log_likelihoods = []
+    probabilities = []
     
-    for i in range(num_classes):
-        log_likelihood_k = log_likelihood(x, means[i], variances[i])
-        log_likelihoods.append(log_likelihood_k)
+    for class_label in range(num_classes):
+        # Create a multivariate normal distribution for the class
+        distribution = multivariate_normal(mean=means[class_label], cov=covariances[class_label])
+        
+        # Compute the log probability (logpdf) of the test data belonging to this class
+        log_prob = distribution.logpdf(x_test)
+        probabilities.append(log_prob)
     
     # Return the class with the highest log likelihood
-    return np.argmax(log_likelihoods)
+    return np.argmax(probabilities)
+
 
 
 def main():
@@ -111,9 +99,9 @@ def main():
     test_data(knn, x_test_flattened, y_test)
 
     means = calculate_means(x_train_noise, y_train)
-    variances = calculate_variances(x_train_noise, y_train)
+    covariances = calculate_covariance(x_train_noise, y_train)
 
-    predict_class(x_test_flattened, means, variances)
+    propabilities = predict_class(x_test_flattened, means, covariances)
 
 if __name__ == "__main__":
     main()
