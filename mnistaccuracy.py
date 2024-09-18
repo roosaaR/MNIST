@@ -43,7 +43,9 @@ def main():
 
     x_train_flattened, x_test_flattened = preprocess_data(x_train, x_test)
 
-    train_data(x_train_flattened, y_train)
+    knn = train_data(x_train_flattened, y_train)
+
+    test_data(knn, x_test_flattened, y_test)
 
 if __name__ == "__main__":
     main()
