@@ -63,6 +63,8 @@ def calculate_covariance(x_train, classes):
     for dataclass in range(num_classes):
         class_data = x_train[classes == dataclass]
         covariance = np.cov(class_data, rowvar=False)
+        rank = np.linalg.matrix_rank(covariance)
+        print(f"Rank of class {dataclass} covariance matrix: {rank}")
         covariances.append(covariance)
 
     return covariances
@@ -75,13 +77,25 @@ def predict_class(x_test, means, covariances):
     for class_label in range(num_classes):
         # Create a multivariate normal distribution for the class
         distribution = multivariate_normal(mean=means[class_label], cov=covariances[class_label])
-        
         # Compute the log probability (logpdf) of the test data belonging to this class
         log_prob = distribution.logpdf(x_test)
         probabilities.append(log_prob)
     
     # Return the class with the highest log likelihood
     return np.argmax(probabilities)
+
+def test_naive_bayes(x_test, y_test, means, variances):
+
+    correct_predictions = 0
+
+    for i in range(len(x_test)):
+        predicted_class = predict_class(x_test[i], means, variances)
+        if predicted_class == y_test[i]:
+            correct_predictions += 1
+            
+    accuracy = correct_predictions / len(x_test)
+
+    print(f"Naive Bayes classification accuracy: {accuracy:.2f}")
 
 
 
@@ -94,14 +108,15 @@ def main():
 
     x_train_noise = add_noise(x_train_flattened)
 
-    knn = train_data(x_train_noise, y_train)
+    #knn = train_data(x_train_noise, y_train)
 
-    test_data(knn, x_test_flattened, y_test)
+    #test_data(knn, x_test_flattened, y_test)
 
     means = calculate_means(x_train_noise, y_train)
     covariances = calculate_covariance(x_train_noise, y_train)
 
-    propabilities = predict_class(x_test_flattened, means, covariances)
+    test_naive_bayes(x_test_flattened, y_test, means, covariances)
+
 
 if __name__ == "__main__":
     main()
