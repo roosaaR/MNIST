@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 from sklearn.neighbors import KNeighborsClassifier
 
-
 def class_acc(pred,gt):
     # Calculates class accuracy
     pred = np.array(pred)
@@ -14,12 +13,11 @@ def class_acc(pred,gt):
     return accuracy
 
 def test_class_acc():
-    # Tests the class_acc function
-    random_preds = np.random.randint(0, 10, 1000)  # Random predictions between 0 and 9
-    random_gt = np.random.randint(0, 10, 1000)  # Random ground truth labels between 0 and 9
+    # Tests the class_acc function with random values
+    random_preds = np.random.randint(0, 10, 1000)  
+    random_gt = np.random.randint(0, 10, 1000)
     accuracy = class_acc(random_preds, random_gt)
     print(f"Accuracy with random predictions: {accuracy:.2f}")
-
 
 def preprocess_data(x_train, x_test):
     # Flatten the images and normalize pixel values to the range [0, 1]
@@ -29,31 +27,29 @@ def preprocess_data(x_train, x_test):
     return x_train_flattened, x_test_flattened
 
 def train_data(x_train, y_train):
-    # Create a KNN classifier
-    knn = KNeighborsClassifier(n_neighbors=5)  
-
-    # Train the classifier
-    knn.fit(x_train, y_train)
+    # Creates 1-NN classifier and trains it
+    knn = KNeighborsClassifier(n_neighbors=1)  
+    knn.fit(x_train, y_train) 
 
     return knn
 
-def test_data(knn, x_test, y_test):
-    test_class_acc()
+def print_accuracy(knn, x_test, y_test):
+    # Prints the classification accuracy 
     y_pred = knn.predict(x_test)
     accuracy = class_acc(y_pred, y_test)  
     print(f"Classification accuracy is {accuracy:.2f}")
-
 
 def main():
     # Load and read the MNIST data
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    x_train_flattened, x_test_flattened = preprocess_data(x_train, x_test)
+    x_train, x_test = preprocess_data(x_train, x_test)
 
-    knn = train_data(x_train_flattened, y_train)
+    knn = train_data(x_train, y_train)
+    test_class_acc()
 
-    test_data(knn, x_test_flattened, y_test)
+    print_accuracy(knn, x_test, y_test)
 
 if __name__ == "__main__":
     main()

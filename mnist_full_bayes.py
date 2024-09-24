@@ -1,8 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import multivariate_normal
-
 
 def preprocess_data(x_train, x_test):
     # Flattens the images and normalizes pixel values to the range [0, 1]
@@ -18,16 +16,6 @@ def add_noise(x_train):
     
     return np.clip(x_train_noise, 0.0, 1.0)
 
-
-def train_data(x_train, y_train):
-    # Create a KNN classifier
-    knn = KNeighborsClassifier(n_neighbors=5)  
-
-    # Train the classifier
-    knn.fit(x_train, y_train)
-
-    return knn
-
 def class_acc(pred,gt):
     # Calculates class accuracy
     pred = np.array(pred)
@@ -38,66 +26,42 @@ def class_acc(pred,gt):
 
     return accuracy
 
-def test_data(knn, x_test, y_test):
-    y_pred = knn.predict(x_test)
-    accuracy = class_acc(y_pred, y_test)  
-    print(f"Classification accuracy is {accuracy:.2f}")
-
 def calculate_means(x_train, classes):
+    # Calculates means for MNIST classes
     num_classes = 10
-
-    means = []
-
-    for dataclass in range(num_classes): 
-        class_data = x_train[classes == dataclass]
-        mean = np.mean(class_data, axis=0)
-        means.append(mean)
-
-    return np.array(means)
+    means = np.array([np.mean(x_train[classes == dataclass], 
+                              axis=0) for dataclass in range(num_classes)])
+    
+    return means
 
 def calculate_covariance(x_train, classes):
+    # Calculates covariances for MNIST classes
     num_classes = 10
-
-    covariances = []
-
-    for dataclass in range(num_classes):
-        class_data = x_train[classes == dataclass]
-        covariance = np.cov(class_data, rowvar=False)
-        rank = np.linalg.matrix_rank(covariance)
-        print(f"Rank of class {dataclass} covariance matrix: {rank}")
-        covariances.append(covariance)
-
+    covariances = np.array([np.cov(x_train[classes == dataclass], rowvar=False) 
+                            + np.eye(x_train.shape[1]) * 1e-6  # Regularization
+                            for dataclass in range(num_classes)])
+    
     return covariances
-
 
 def predict_class(x_test, means, covariances):
     num_classes = len(means)
-    probabilities = []
+    num_samples = x_test.shape[0]
+    log_likelihoods = np.zeros((num_samples, num_classes))
+
+    # Compute log-likelihoods for each class for each test sample
+    mvns = [multivariate_normal(mean=means[class_label], cov=covariances[class_label]) for class_label in range(num_classes)]
+    log_likelihoods = np.array([mvn.logpdf(x_test) for mvn in mvns]).T
     
-    for class_label in range(num_classes):
-        # Create a multivariate normal distribution for the class
-        distribution = multivariate_normal(mean=means[class_label], cov=covariances[class_label])
-        # Compute the log probability (logpdf) of the test data belonging to this class
-        log_prob = distribution.logpdf(x_test)
-        probabilities.append(log_prob)
-    
-    # Return the class with the highest log likelihood
-    return np.argmax(probabilities)
+    # Return the predicted class with the highest log-likelihood
+    return np.argmax(log_likelihoods, axis=1)
 
-def test_naive_bayes(x_test, y_test, means, variances):
+def test_full_bayes(x_test, y_test, means, covariances):
+    # Predict the class for all test samples at once
+    predicted_classes = predict_class(x_test, means, covariances)
 
-    correct_predictions = 0
-
-    for i in range(len(x_test)):
-        predicted_class = predict_class(x_test[i], means, variances)
-        if predicted_class == y_test[i]:
-            correct_predictions += 1
-            
-    accuracy = correct_predictions / len(x_test)
-
-    print(f"Naive Bayes classification accuracy: {accuracy:.2f}")
-
-
+    # Calculate accuracy
+    accuracy = np.mean(predicted_classes == y_test)
+    print(f"Full Bayes classification accuracy: {accuracy:.2f}")
 
 def main():
     # Load the MNIST data
@@ -105,18 +69,12 @@ def main():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     x_train_flattened, x_test_flattened = preprocess_data(x_train, x_test)
-
     x_train_noise = add_noise(x_train_flattened)
-
-    #knn = train_data(x_train_noise, y_train)
-
-    #test_data(knn, x_test_flattened, y_test)
 
     means = calculate_means(x_train_noise, y_train)
     covariances = calculate_covariance(x_train_noise, y_train)
 
-    test_naive_bayes(x_test_flattened, y_test, means, covariances)
-
+    test_full_bayes(x_test_flattened, y_test, means, covariances)
 
 if __name__ == "__main__":
     main()
