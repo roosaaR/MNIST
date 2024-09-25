@@ -28,19 +28,27 @@ def preprocess_data(x_train, x_test, y_train, y_test):
 
     return x_train_flattened, x_test_flattened, y_train, y_test
 
+
+def plot_data(tr_hist):
+    plt.plot(tr_hist.history['loss'])
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['training'], loc='upper right')
+    plt.show()
+
+
 def main():
     # Load the MNIST data
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-
     x_train, x_test, y_train, y_test = preprocess_data(x_train, x_test, y_train, y_test)
 
     model = Sequential()
-    model.add(Dense(5, input_dim=784, activation='relu'))
-    model.add(Dense(10, activation='softmax'))
+    model.add(Dense(64, input_dim=784, activation='relu'))
+    model.add(Dense(10, activation='sigmoid'))
 
-    tf.keras.optimizers.SGD(lr=0.01)
-    model.compile(optimizer='sgd', loss='categorical_crossentropy', metrics=['accuracy'])
+    sgd = tf.keras.optimizers.SGD(lr=0.01)
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     num_of_epochs = 10
 
     tr_hist = model.fit(x_train, y_train, epochs=num_of_epochs, verbose=1)
@@ -48,12 +56,7 @@ def main():
     test_loss, test_accuracy = model.evaluate(x_test, y_test)
     print(f'Test Accuracy: {test_accuracy:.4f}')
 
-    plt.plot(tr_hist.history['loss'])
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['training'], loc='upper right')
-    plt.show()
-
+    plot_data(tr_hist)
 
 if __name__ == "__main__":
     main()
