@@ -10,14 +10,15 @@ In this project, we implement and evaluate three classification methods:
 1. **1-Nearest Neighbor (1-NN)** — Classifies based on the closest training example.
 2. **Naive Bayes** — Assumes independence between pixel values and uses probabilistic modeling for classification.
 3. **Full Bayes** — Models the entire joint probability distribution of the pixel values.
+4. **Multilayer Perceptron (MLP)** — A fully connected neural network that uses backpropagation to learn from the data.
 
 ### Files Included
 - **`mnist_nn.py`**: Implementation of the 1-Nearest Neighbor classifier for MNIST data.
 - **`mnist_naive_bayes.py`**: Implementation of Naive Bayes classification.
 - **`mnist_full_bayes.py`**: Implementation of Full Bayes classification.
+- **`mnist_mlp.py`**: Implementation of the Multilayer Perceptron (MLP) classifier using Keras.
 - **`utils.py`**: Contains utility functions such as data preprocessing and accuracy calculation.
 - **`README.md`**: This documentation file.
-- **Other Scripts/Models**: (If you have additional files, list them here).
 
 ## 1-Nearest Neighbor Classifier (mnist_nn.py)
 
@@ -64,7 +65,6 @@ The **`mnist_naive_bayes.py`** file implements the Naive Bayes classifier for th
   - Predicts the class label for a given input by comparing the log-likelihoods for each class.
 
 
-
 ## Full Bayes Classifier (mnist_full_bayes.py)
 
 The **`mnist_full_bayes.py`** file implements the Full Bayes classifier for the MNIST dataset. Unlike Naive Bayes, which assumes pixel independence, the Full Bayes classifier models the **joint distribution** of pixel values, allowing for more complex relationships between the pixels.
@@ -90,3 +90,28 @@ The **`mnist_full_bayes.py`** file implements the Full Bayes classifier for the 
 
 - **`predict_class(x_test, means, covariances)`**:
   - Predicts the class label for each input test sample by calculating the log-likelihood for each class and returning the class with the highest log-likelihood.
+
+
+## Multilayer Perceptron (MLP) Classifier (mnist_mlp.py)
+
+The **`mnist_mlp.py`** file implements a Multilayer Perceptron (MLP) classifier for the MNIST dataset using Keras. The MLP is a fully connected feedforward neural network trained with backpropagation.
+
+### Key Features:
+- **Two Hidden Layers**:
+  - The first hidden layer has 64 neurons with the ReLU activation function.
+  - The second hidden layer has 32 neurons, also with ReLU activation.
+  
+- **Output Layer**: The output layer has 10 neurons with a softmax activation function to represent the 10 possible digit classes (0-9).
+  
+- **SGD Optimizer**: The model is trained using Stochastic Gradient Descent (SGD) with a learning rate of 0.01.
+
+### Functions
+
+- **`preprocess_data(x_train, x_test, y_train, y_test)`**:
+  - Flattens the 28x28 pixel MNIST images into 784-dimensional vectors, normalizes pixel values, and one-hot encodes the class labels.
+
+- **`create_model()`**:
+  - Creates the MLP model with two hidden layers and an output layer using Keras.
+
+- **`plot_data(tr_hist)`**:
+  - Plots the training loss curve over time to visualize how well the model learns during training.
