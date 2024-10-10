@@ -17,7 +17,6 @@ In this project, we implement and evaluate three classification methods:
 - **`mnist_naive_bayes.py`**: Implementation of Naive Bayes classification.
 - **`mnist_full_bayes.py`**: Implementation of Full Bayes classification.
 - **`mnist_mlp.py`**: Implementation of the Multilayer Perceptron (MLP) classifier using Keras.
-- **`utils.py`**: Contains utility functions such as data preprocessing and accuracy calculation.
 - **`README.md`**: This documentation file.
 
 ## 1-Nearest Neighbor Classifier (mnist_nn.py)
